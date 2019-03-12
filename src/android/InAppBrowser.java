@@ -63,6 +63,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;  
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.Config;
@@ -166,7 +167,7 @@ public class InAppBrowser extends CordovaPlugin {
             final String target = t;
             final HashMap<String, String> features = parseFeature(args.optString(2));
 
-            LOG.d(LOG_TAG, "target = " + target);
+            LOG.d(LOG_TAG, "SB target = " + target);
 
             this.cordova.getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -229,7 +230,7 @@ public class InAppBrowser extends CordovaPlugin {
                         }
                         // load in InAppBrowser
                         else {
-                            LOG.d(LOG_TAG, "loading in InAppBrowser");
+                            LOG.d(LOG_TAG, "loading in SB InAppBrowser");
                             result = showWebPage(url, features);
                         }
                     }
@@ -956,6 +957,46 @@ public class InAppBrowser extends CordovaPlugin {
                 settings.setBuiltInZoomControls(showZoomControls);
                 settings.setPluginState(android.webkit.WebSettings.PluginState.ON);
 
+                /**sbcode inappwebview interface */
+           /** cordova.getActivity().getApplicationContext() */
+                // Add SBcode interface
+                class sbJsObject {
+                    Context mContext;
+                    WebView mWebView;
+
+                    sbJsObject(Context c, WebView webView) 
+                    {
+                        mContext = c;
+                        mWebView = webView;
+                    }
+                    @JavascriptInterface
+                    public void scan() {
+                        try {
+                            Toast.makeText(mContext, "Android called ", Toast.LENGTH_LONG).show();
+                            LOG.d(LOG_TAG, " sbJsObject scan Android called ");
+                        } catch (Exception ex) {
+                            LOG.e(LOG_TAG, "data object passed to postMessage has caused a JSON error.");
+                        }
+                    }
+                    @JavascriptInterface
+                    public void test() {
+                        try {
+                            Toast.makeText(mContext, "SB test code Native Android called ", Toast.LENGTH_LONG).show();
+                            LOG.d(LOG_TAG, " SB test code Native Android called ");
+                        } catch (Exception ex) {
+                            LOG.e(LOG_TAG, "data object passed to postMessage has caused a JSON error.");
+                        }
+                    }
+
+                    @JavascriptInterface
+                    public void filedownload() 
+                    {
+                        /** code here */
+                    }
+                }
+
+                /**sbcode end */
+
                 // Add postMessage interface
                 class JsObject {
                     @JavascriptInterface
@@ -974,6 +1015,10 @@ public class InAppBrowser extends CordovaPlugin {
                 if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
                     settings.setMediaPlaybackRequiresUserGesture(mediaPlaybackRequiresUserGesture);
                     inAppWebView.addJavascriptInterface(new JsObject(), "cordova_iab");
+                    
+                  
+                    inAppWebView.addJavascriptInterface(new sbJsObject(cordova.getActivity().getApplicationContext(),inAppWebView), "SB");   /** sbcode */
+
                 }
 
                 String overrideUserAgent = preferences.getString("OverrideUserAgent", null);
